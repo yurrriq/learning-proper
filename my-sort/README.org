@@ -1,8 +1,8 @@
 #+OPTIONS: title:nil toc:nil num:0 author:t
 #+TITLE: my-sort
+#+SUBTITLE: LFE translation of the "PropEr introduction to Property-Based Testing."
 #+DATE: <2015-12-19 Sat>
 #+AUTHOR: Eric Bailey
-#+SUBTITLE: LFE translation of the "PropEr introduction to Property-Based Testing."
 #+LANGUAGE: en
 #+CREATOR: Emacs 24.5.1 (Org mode 8.3.2)
 

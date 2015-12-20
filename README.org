@@ -1,0 +1,13 @@
+#+OPTIONS: title:nil toc:nil num:0 author:t
+#+TITLE: Learning PropEr
+#+SUBTITLE: My code/notes as I learn PropEr.
+#+DATE: <2015-12-19 Sat>
+#+AUTHOR: Eric Bailey
+#+LANGUAGE: en
+#+CREATOR: Emacs 24.5.1 (Org mode 8.3.2)
+
+* Learning [[http://proper.softlab.ntua.gr][PropEr]]
+My code/notes as I learn [[http://proper.softlab.ntua.gr][PropEr]].
+
+** my-sort
+[[https://github.com/rvirding/lfe][LFE]] translation of the [[http://proper.softlab.ntua.gr/Tutorials/PropEr_introduction_to_Property-Based_Testing.html][PropEr introduction to Property-Based Testing]].
