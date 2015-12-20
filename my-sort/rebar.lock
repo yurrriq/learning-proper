@@ -28,5 +28,5 @@
   0},
  {<<"propl">>,
   {git,"git://github.com/quasiquoting/propl",
-       {ref,"298212ca1bb26b51765f97795e36c442e389e0b6"}},
+       {ref,"84d84f065f087cf1d74c720a95040538700d5abf"}},
   0}].

@@ -106,7 +106,7 @@ And, for the sake of conven{ience,tion}, the [[https://github.com/lfex/ltest][lt
        ,(_assertEqual '[17 42] (sort `(,x ,y))))))
 
 (defun test_four ()
-  `#("[3 1 4 2]"
+  `#("[3,1,4,2]"
      ,(_assertEqual '[1 2 3 4] (sort '[3 1 4 2]))))
 #+END_SRC
 

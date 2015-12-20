@@ -96,7 +96,7 @@
        ,(_assertEqual '[17 42] (sort `(,x ,y))))))
 
 (defun test_four ()
-  `#("[3 1 4 2]"
+  `#("[3,1,4,2]"
      ,(_assertEqual '[1 2 3 4] (sort '[3 1 4 2]))))
 
 ;; See http://proper.softlab.ntua.gr/User_Guide.html#using_proper_in_conjunction_with_eunit
