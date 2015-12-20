@@ -1,0 +1,15 @@
+{application, 'my-sort',
+ [{description,
+   "LFE translation of the \"PropEr introduction to Property-Based Testing\"."},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications, [kernel, stdlib]},
+  {env,[]},
+  {modules, []},
+
+  {contributors, ["Eric Bailey"]},
+  {licenses, ["MIT"]},
+  {links,
+   [{"Github",
+     "https://github.com/yurrriq/learning-proper/blob/master/my-sort/"}]}
+ ]}.

@@ -1,0 +1,369 @@
+#+OPTIONS: title:nil toc:nil num:0 author:t
+#+TITLE: my-sort
+#+DATE: <2015-12-19 Sat>
+#+AUTHOR: Eric Bailey
+#+SUBTITLE: LFE translation of the "PropEr introduction to Property-Based Testing."
+#+LANGUAGE: en
+#+CREATOR: Emacs 24.5.1 (Org mode 8.3.2)
+
+* my-sort
+  :PROPERTIES:
+  :noweb:    yes
+  :END:
+[[https://github.com/rvirding/lfe][LFE]] translation of the [[http://proper.softlab.ntua.gr/Tutorials/PropEr_introduction_to_Property-Based_Testing.html][PropEr introduction to Property-Based Testing]].
+
+First, we define the ~my-sort~ module and save ([[./ob-lfe.el][tangle]]) it to [[./src/my-sort.lfe][src/my-sort.lfe]].
+
+#+NAME: my-sort
+#+BEGIN_SRC lfe :tangle src/my-sort.lfe :results silent
+(defmodule my-sort
+  (export (sort 1))
+  ;; Lazy hack to ensure properties are accesible.
+  (export all)
+  (import
+    (from propl
+      (any-list 0)
+      (list-of 1))))
+#+END_SRC
+#+BEGIN_SRC lfe :exports none :tangle src/my-sort.lfe
+<<proper-hrl>>
+
+<<propl-macros>>
+
+<<eunit-hrl>>
+
+<<ltest-macros>>
+#+END_SRC
+#+BEGIN_SRC lfe :tangle src/my-sort.lfe
+;; -spec sort([T]) -> [T].
+(defun sort
+  (['()]         '())
+  ([`(,p . ,xs)] (++ (sort (lc ((<- x xs) (< x p)) x))
+                     `(,p)
+                     (sort (lc ((<- x xs) (< p x)) x)))))
+#+END_SRC
+
+Then we can compile it.
+#+NAME: compile
+#+BEGIN_SRC lfe :exports both
+(c "src/my-sort.lfe")
+#+END_SRC
+
+#+RESULTS: compile
+: (#(module my-sort))
+
+Let's run a few examples.
+#+NAME: example-1
+#+BEGIN_SRC lfe :exports both
+(my-sort:sort '[17 42])
+#+END_SRC
+
+#+RESULTS: example-1
+: (17 42)
+
+#+NAME: example-2
+#+BEGIN_SRC lfe :exports both
+(my-sort:sort '[42 17])
+#+END_SRC
+
+#+RESULTS: example-2
+: (17 42)
+
+#+NAME: example-3
+#+BEGIN_SRC lfe :exports both
+(my-sort:sort '[3 1 4 2])
+#+END_SRC
+
+#+RESULTS: example-3
+: (1 2 3 4)
+
+Now, let's write some unit tests.
+
+But first, we have to include the EUnit headers.
+#+NAME: eunit-hrl
+#+BEGIN_SRC lfe
+(include-lib "eunit/include/eunit.hrl")
+#+END_SRC
+
+And, for the sake of conven{ience,tion}, the [[https://github.com/lfex/ltest][ltest]] macros.
+#+NAME: ltest-macros
+#+BEGIN_SRC lfe
+(include-lib "ltest/include/ltest-macros.lfe")
+#+END_SRC
+
+#+NAME: unit-tests
+#+BEGIN_SRC lfe :results silent
+(deftestgen sort ()
+  `[,(test_zero) ,(test_two) ,(test_four)])
+
+(defun test_zero ()
+  `#("the empty list"
+     ,(_assertEqual '[] (sort '[]))))
+
+(defun test_two ()
+  (lc ((<- `#(,x ,y) '[#(17 42) #(42 17)]))
+    `#(,(lists:flatten (io_lib:format "~p" `([,x ,y])))
+       ,(_assertEqual '[17 42] (sort `(,x ,y))))))
+
+(defun test_four ()
+  `#("[3 1 4 2]"
+     ,(_assertEqual '[1 2 3 4] (sort '[3 1 4 2]))))
+#+END_SRC
+
+N.B. EUnit gets very upset with kebab, so we use snake here.
+
+Recompile.
+#+NAME: compile-with-tests
+#+BEGIN_SRC lfe :exports both
+(c "src/my-sort.lfe")
+#+END_SRC
+
+#+RESULTS: compile-with-tests
+: (#(module my-sort))
+
+Run the tests.
+#+NAME: run-tests
+#+BEGIN_SRC lfe :exports both
+(eunit:test 'my-sort)
+#+END_SRC
+
+#+RESULTS: run-tests
+:   All 4 tests passed.
+: ok
+
+Now, for some property-based testing!
+#+NAME: proper-hrl
+#+BEGIN_SRC lfe
+(include-lib "proper/include/proper.hrl")
+#+END_SRC
+
+N.B. This needs to come *before* including =eunit.hrl= since they both define
+some macros with the same names.
+
+For convenience, include the [[https://github.com/quasiquoting/propl/blob/master/include/propl-macros.lfe][propl macros]].
+
+#+NAME: propl-macros
+#+BEGIN_SRC lfe
+(include-lib "propl/include/propl-macros.lfe")
+#+END_SRC
+
+The "ordered" property.
+#+NAME: prop_ordered
+#+BEGIN_SRC lfe :tangle src/my-sort.lfe
+(defprop ordered
+  (FORALL xs (list-of (proper_types:integer)) (ordered (sort xs))))
+#+END_SRC
+
+#+NAME: ordered
+#+BEGIN_SRC lfe :tangle src/my-sort.lfe
+(defun ordered
+  (['()]           'true)
+  ([`(,_)]         'true)
+  ([`(,a ,b . ,t)] (andalso (=< a b) (ordered `(,b . ,t)))))
+#+END_SRC
+
+#+BEGIN_SRC lfe
+<<compile>>
+#+END_SRC
+
+#+RESULTS:
+: src/my-sort.lfe:7: error expanding (include-lib "propl/include/propl-macros.lfe")
+: error
+
+#+NAME: quickcheck-prop_ordered
+#+BEGIN_SRC lfe :exports results
+(proper:quickcheck (my-sort:prop_ordered))
+#+END_SRC
+
+#+RESULTS: quickcheck-prop_ordered
+: ....................................................................................................
+: OK: Passed 100 test(s).
+: true
+
+# #+NAME: quickcheck-prop_ordered-some-more
+# #+BEGIN_SRC lfe :exports results
+# (proper:quickcheck (my-sort:prop_ordered) 4711)
+# #+END_SRC
+
+# #+RESULTS: quickcheck-prop_ordered-some-more
+# : ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... ........................................................................................................................... .....................................
+# : OK: Passed 4711 test(s).
+# : true
+
+The "same length" property.
+#+NAME: prop_same_length
+#+BEGIN_SRC lfe :tangle src/my-sort.lfe
+(defprop same-length ()
+  (FORALL xs (any-list) (=:= (length xs) (length (sort xs)))))
+#+END_SRC
+
+#+BEGIN_SRC lfe
+<<compile>>
+#+END_SRC
+
+#+RESULTS:
+: (#(module my-sort))
+
+#+NAME: quickcheck-prop_same_length
+#+BEGIN_SRC lfe :exports results
+(proper:quickcheck (my-sort:prop_same_length))
+#+END_SRC
+
+#+RESULTS: quickcheck-prop_same_length
+: ............!
+: Failed: After 13 test(s).
+: [[],{-11,{}},[],<<254,196>>]
+:
+: Shrinking ..(2 time(s))
+: [[],[]]
+: false
+
+#+NAME: same_length-failure-1
+#+BEGIN_SRC lfe
+(my-sort:sort '[[] #(-11 #()) [] #b(254 196)])
+#+END_SRC
+
+#+RESULTS: same_length-failure-1
+: (#(-11 #()) () #B(254 196))
+
+#+NAME: same_length-failure-2
+#+BEGIN_SRC lfe
+(my-sort:sort '[[] []])
+#+END_SRC
+
+#+RESULTS: same_length-failure-2
+: (())
+
+#+NAME: prop_same_length_conditional_check
+#+BEGIN_SRC lfe :tangle src/my-sort.lfe
+(defprop same-length-conditional-check
+  (FORALL xs (list-of (proper_types:integer))
+          (IMPLIES (distinct? xs) (=:= (length xs) (length (sort xs))))))
+#+END_SRC
+
+#+NAME: distinct
+#+BEGIN_SRC lfe :tangle src/my-sort.lfe
+(defmacro unless
+  (`[,test . ,body] `(if ,test 'false (progn ,@body))))
+
+;; Shout out to Clojure!
+(defun distinct?
+  (['()]      'true)
+  ([`(,_)]    'true)
+  ([`(,x ,y)] (/= x y))
+  ([`(,x ,y . ,more)]
+   (if (/= x y)
+     (fletrec ((loop
+                ([_seen '()]  'true)
+                ([seen `(,x . ,xs)]
+                 (unless (sets:is_element x seen)
+                   (loop (sets:add_element x seen) xs)))))
+       (loop (sets:from_list `(,x ,y)) more))
+     'false)))
+#+END_SRC
+
+#+NAME: prop_same_length_distinct
+#+BEGIN_SRC lfe :tangle src/my-sort.lfe
+(defun list-distinct (type)
+  (prop-let xs (list-of type) (distinct xs)))
+
+(defprop same-length-distinct
+  (FORALL xs (list-distinct (proper_types:integer))
+          (=:= (length xs) (length (sort xs)))))
+#+END_SRC
+
+#+NAME: list-distinct
+#+BEGIN_SRC lfe :tangle src/my-sort.lfe
+;; (defun distinct
+;;   (['()]  'true)
+;;   ([coll] (distinct coll (sets:new))))
+
+;; (defun distinct
+;;   (['() _seen] '())
+;;   ([`(,x . ,xs) seen]
+;;    (if (sets:is_element x seen)
+;;      (distinct xs seen)
+;;      (cons x (distinct xs (sets:add_element x seen))))))
+
+(defun distinct
+  (['()] '())
+  ([`(,h . ,t)]
+   (if (lists:member h t)
+     (distinct t)
+     (cons h (distinct t)))))
+#+END_SRC
+
+#+BEGIN_SRC lfe
+<<compile>>
+#+END_SRC
+
+#+RESULTS:
+: (#(module my-sort))
+
+#+NAME: quickcheck-prop_same_length_distinct
+#+BEGIN_SRC lfe :exports results
+(proper:quickcheck (my-sort:prop_same_length_distinct))
+#+END_SRC
+
+#+RESULTS: quickcheck-prop_same_length_distinct
+: ....................................................................................................
+: OK: Passed 100 test(s).
+: true
+
+#+NAME: prop_equiv_usort
+#+BEGIN_SRC lfe :tangle src/my-sort.lfe
+(defprop equiv-usort
+  (FORALL xs (list-of (proper_types:integer)) (=:= (sort xs) (lists:usort xs))))
+#+END_SRC
+
+#+NAME: quickcheck-prop_equiv_usort
+#+BEGIN_SRC lfe :exports results
+(proper:quickcheck (my-sort:prop_equiv_usort))
+#+END_SRC
+
+#+RESULTS: quickcheck-prop_equiv_usort
+: ....................................................................................................
+: OK: Passed 100 test(s).
+: true
+
+#+BEGIN_SRC lfe :exports :tangle src/my-sort.lfe
+<<unit-tests>>
+#+END_SRC
+
+
+Let's test it with EUnit!
+#+BEGIN_SRC lfe :exports :tangle src/my-sort.lfe
+;; See http://proper.softlab.ntua.gr/User_Guide.html#using_proper_in_conjunction_with_eunit
+(deftestgen properties
+  (let ((opts  '[#(to_file user)])
+        (tests `(#("ordered"
+                   ,(my-sort:prop_ordered))
+                 #("same length conditional"
+                   ,(my-sort:prop_same_length_conditional_check))
+                 #("same length distinct"
+                   ,(my-sort:prop_same_length_distinct)))))
+    (lc ((<- `#(,title ,prop) tests))
+      `#(,title ,(_assert (proper:quickcheck prop))))))
+#+END_SRC
+
+#+NAME: eunit-test
+#+BEGIN_SRC lfe :exports results
+(eunit:test 'my-sort '[verbose])
+#+END_SRC
+
+#+RESULTS: eunit-test
+#+begin_example
+======================== EUnit ========================
+module 'my-sort'
+  my-sort:99: properties_test_ (ordered)...[0.003 s] ok
+  my-sort:99: properties_test_ (same length conditional)...[0.011 s] ok
+  my-sort:99: properties_test_ (same length distinct)...[0.004 s] ok
+  my-sort:85: test_zero (the empty list)...ok
+  my-sort:89: test_two ([17,42])...ok
+  my-sort:89: test_two ([42,17])...ok
+  my-sort:94: test_four ([3 1 4 2])...ok
+  [done in 0.039 s]
+=======================================================
+  All 7 tests passed.
+ok
+#+end_example
