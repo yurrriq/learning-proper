@@ -9,7 +9,7 @@
           (prop_equiv_usort 0))
   ;; EUnit tests
   (export (properties_test_ 0) (sort_test_ 0))
-  ;; Prop{Er,L} helper functions
+  ;; Import Prop{Er,L} helper functions
   (import (from proper_types (integer 0))
           (from propl        (any-list 0) (list-of 1))))
 
@@ -40,7 +40,7 @@
 
 
 ;;;===================================================================
-;;; Property tests
+;;; Property Tests
 ;;;===================================================================
 
 (defprop ordered
@@ -80,10 +80,10 @@
 
 
 ;;;===================================================================
-;;; Unit tests
+;;; Unit Tests
 ;;;===================================================================
 
-(deftestgen sort () `[,(test_zero) ,(test_two) ,(test_four)])
+(deftestgen sort `[,(test_zero) ,(test_two) ,(test_four)])
 
 (defun test_zero () (expect #("the empty list" []) #("The empty list" [])))
 
@@ -95,7 +95,7 @@
 
 
 ;;;===================================================================
-;;; Internal functions
+;;; Internal Functions
 ;;;===================================================================
 
 (defmacro unless
